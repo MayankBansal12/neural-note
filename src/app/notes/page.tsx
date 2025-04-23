@@ -227,7 +227,11 @@ export default function NotesPage() {
               ) : (
                 <>
                   {allNotes.map((note: Note) => (
-                    <div key={note.id} className="rounded-2xl border bg-card p-4 overflow-hidden">
+                    <div
+                      key={note.id}
+                      className="rounded-2xl border bg-card p-4 overflow-hidden hover:border-primary/50 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/notes/${note.id}`)}
+                    >
                       <p className="whitespace-pre-wrap break-words line-clamp-[8] text-sm">
                         {note.content}
                       </p>
