@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,6 +11,7 @@ import { Icons } from "@/components/ui/icons"
 import { useToast } from "@/components/ui/use-toast"
 
 export function LoginForm() {
+  const supabase = createPagesBrowserClient()
   const [isLoading, setIsLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
