@@ -8,6 +8,8 @@ import { CreateNote } from "@/components/notes/create-note"
 import { Shimmer } from "@/components/ui/shimmer"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ArrowUpDown, Grid, LayoutList } from "lucide-react"
+import { NotePopover } from "@/components/notes/note-popover"
+import { formatDate } from "@/lib/format"
 
 interface Note {
   id: string
@@ -30,15 +32,21 @@ export default function NotesPage() {
   const router = useRouter()
   const [hasMore, setHasMore] = useState(true)
 
-  // Get view preferences from URL or defaults
+  // Get view preferences and note ID from URL
   const sortOrder = (searchParams.get("sort") as SortOrder) || "desc"
   const gridView = (searchParams.get("view") as GridView) || "double"
+  const selectedNoteId = searchParams.get("note")
 
   // Update URL params
-  const updateUrlParams = (params: { sort?: SortOrder; view?: GridView }) => {
+  const updateUrlParams = (params: { sort?: SortOrder; view?: GridView; note?: string | null }) => {
     const newParams = new URLSearchParams(searchParams)
     if (params.sort) newParams.set("sort", params.sort)
     if (params.view) newParams.set("view", params.view)
+    if (params.note) {
+      newParams.set("note", params.note)
+    } else if (params.note === null) {
+      newParams.delete("note")
+    }
     router.push(`?${newParams.toString()}`)
   }
 
@@ -133,18 +141,15 @@ export default function NotesPage() {
     return () => observer.disconnect()
   }, [handleObserver])
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleString([], {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
+  const allNotes = data?.pages.flatMap(page => page.notes) || []
+
+  const handleNoteClick = (noteId: string) => {
+    updateUrlParams({ note: noteId })
   }
 
-  const allNotes = data?.pages.flatMap(page => page.notes) || []
+  const handleClosePopover = () => {
+    updateUrlParams({ note: null })
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -230,7 +235,7 @@ export default function NotesPage() {
                     <div
                       key={note.id}
                       className="rounded-2xl border bg-card p-4 overflow-hidden hover:border-primary/50 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/notes/${note.id}`)}
+                      onClick={() => handleNoteClick(note.id)}
                     >
                       <p className="whitespace-pre-wrap break-words line-clamp-[8] text-sm">
                         {note.content}
@@ -252,6 +257,15 @@ export default function NotesPage() {
               )}
             </div>
           </>
+        )}
+
+        {/* Note Popover */}
+        {selectedNoteId && (
+          <NotePopover
+            id={selectedNoteId}
+            isOpen={true}
+            onClose={handleClosePopover}
+          />
         )}
       </main>
     </div>
