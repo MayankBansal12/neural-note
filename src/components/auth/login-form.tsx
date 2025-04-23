@@ -71,7 +71,7 @@ export function LoginForm() {
             title: "Success",
             description: "You have been successfully logged in.",
           })
-          router.push("/dashboard")
+          router.push("/notes")
         }
       }
     } catch (err) {

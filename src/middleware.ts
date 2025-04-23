@@ -9,13 +9,13 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  if (!session && request.nextUrl.pathname.startsWith("/dashboard")) {
+  if (!session && request.nextUrl.pathname.startsWith("/notes")) {
     const redirectUrl = new URL("/", request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
   if (session && request.nextUrl.pathname === "/") {
-    const redirectUrl = new URL("/dashboard", request.url)
+    const redirectUrl = new URL("/notes", request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
