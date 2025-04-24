@@ -5,7 +5,6 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useSearchParams, useRouter } from "next/navigation"
 import { CreateNote } from "@/components/notes/create-note"
 import { Shimmer } from "@/components/ui/shimmer"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { ArrowUpDown, Grid, LayoutList } from "lucide-react"
 import { NotePopover } from "@/components/notes/note-popover"
 import { formatDate } from "@/lib/format"
@@ -13,6 +12,7 @@ import { ChatButton } from "@/components/chat/ChatButton"
 import { Chat } from "@/components/chat/Chat"
 import { useFetchNotes } from "@/hooks/useNotes"
 import { Note, SortOrder, GridView } from "@/lib/types"
+import { Header } from "@/components/layout/header"
 
 function NotesContent() {
   const supabase = createClientComponentClient()
@@ -125,14 +125,7 @@ function NotesContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="flex h-16 items-center px-4">
-          <div className="flex-1">
-            <h1 className="text-xl font-semibold">neuronote</h1>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
+      <Header />
 
       <main className="container max-w-3xl mx-auto p-4 space-y-8">
         <div className="flex items-center justify-between">

@@ -5,7 +5,7 @@ import { Send, Trash2, Loader2, Copy, Plus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { getAIResponse } from '@/lib/aiResponse'
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { Note } from "@/lib/types"
+import { Message, Note } from "@/lib/types"
 
 interface ChatProps {
   isOpen: boolean
