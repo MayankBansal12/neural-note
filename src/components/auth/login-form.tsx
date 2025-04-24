@@ -74,7 +74,7 @@ export function LoginForm() {
           router.push("/notes")
         }
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       toast({
         variant: "destructive",
@@ -106,7 +106,7 @@ export function LoginForm() {
           description: error.message,
         })
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       toast({
         variant: "destructive",

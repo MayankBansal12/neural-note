@@ -36,16 +36,3 @@ export default function Home() {
     </main>
   )
 }
-
-function Feature({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="relative">
-      <dt className="text-lg font-semibold">
-        {title}
-      </dt>
-      <dd className="mt-2 text-muted-foreground">
-        {description}
-      </dd>
-    </div>
-  )
-}

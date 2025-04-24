@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback, Suspense } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useSearchParams, useRouter } from "next/navigation"
@@ -25,17 +25,17 @@ type GridView = "single" | "double"
 
 const NOTES_PER_PAGE = 5
 
-export default function NotesPage() {
+function NotesContent() {
   const supabase = createClientComponentClient()
   const [greeting, setGreeting] = useState("")
   const [firstName, setFirstName] = useState("")
   const [currentTime, setCurrentTime] = useState(new Date())
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [hasMore, setHasMore] = useState(true)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [noteToSummarize, setNoteToSummarize] = useState<Note | null>(null)
   const [newNoteContent, setNewNoteContent] = useState("")
+  const [notes, setNotes] = useState<Note[]>([])
 
   // Get view preferences and note ID from URL
   const sortOrder = (searchParams.get("sort") as SortOrder) || "desc"
@@ -169,7 +169,7 @@ export default function NotesPage() {
     if (noteToSummarize) {
       handleSummarizeNote()
     }
-  }, [noteToSummarize])
+  }, [noteToSummarize, handleSummarizeNote])
 
   return (
     <div className="min-h-screen bg-background">
@@ -213,7 +213,7 @@ export default function NotesPage() {
         {/* Notes List */}
         {!isLoading && allNotes.length === 0 ? (
           <div className="text-center p-8">
-            <p className="text-muted-foreground">no notes currently, why don't you<br />get started by writing how you feel?</p>
+            <p className="text-muted-foreground">Don&apos;t have any notes yet? Create one!</p>
           </div>
         ) : (
           <>
@@ -306,7 +306,7 @@ export default function NotesPage() {
       <ChatButton onClick={() => setIsChatOpen(!isChatOpen)} />
       <Chat 
         isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)}
+        // onClose={() => setIsChatOpen(false)}
         noteToSummarize={noteToSummarize}
         onCreateNote={(content: string) => {
           setNewNoteContent(content)
@@ -315,5 +315,13 @@ export default function NotesPage() {
         }}
       />
     </div>
+  )
+}
+
+export default function NotesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NotesContent />
+    </Suspense>
   )
 } 

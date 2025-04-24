@@ -23,14 +23,13 @@ interface Note {
 
 interface ChatProps {
   isOpen: boolean
-  onClose: () => void
   noteToSummarize?: Note | null
   onCreateNote?: (content: string) => void
 }
 
 const DEFAULT_AI_ERROR = 'Looks like neuro AI is not working right now, please try again later!'
 
-export function Chat({ isOpen, onClose, noteToSummarize, onCreateNote }: ChatProps) {
+export function Chat({ isOpen, noteToSummarize, onCreateNote }: ChatProps) {
   const supabase = createClientComponentClient()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
@@ -53,7 +52,6 @@ export function Chat({ isOpen, onClose, noteToSummarize, onCreateNote }: ChatPro
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Handle note summarization
   useEffect(() => {
     if (noteToSummarize) {
       const summarizeNote = async () => {
@@ -194,8 +192,7 @@ export function Chat({ isOpen, onClose, noteToSummarize, onCreateNote }: ChatPro
 
     try {
       let aiPrompt = option
-      
-      // If summarizing notes, fetch recent notes and include them in the prompt
+
       if (option.includes('summarize')) {
         const recentNotes = await fetchRecentNotes()
         if (recentNotes.length === 0) {

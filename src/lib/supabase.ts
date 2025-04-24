@@ -7,12 +7,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type AuthError = {
   message: string
+  status?: number
+  name?: string
 }
 
 export type AuthResponse = {
-  error: AuthError | null
   data: {
-    user: any
-    session: any
+    user: {
+      id: string
+      email: string
+      user_metadata: Record<string, unknown>
+    }
+    session: {
+      access_token: string
+      refresh_token: string
+      expires_at: number
+    }
   } | null
+  error: AuthError | null
 } 
