@@ -122,7 +122,7 @@ export function LoginForm() {
     <div className="grid gap-6">
       <div className="grid gap-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          {isSignUp ? "Create an account" : "Welcome back"}
+          {isSignUp ? "Create an account on neuro note" : "Welcome back on neuro note"}
         </h1>
         <p className="text-sm text-muted-foreground">
           {isSignUp

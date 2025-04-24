@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import { LoginForm } from "@/components/auth/login-form"
+import { TypewriterEffect } from "@/components/ui/typewriter-effect"
 
 export const metadata: Metadata = {
   title: "neuro Note - AI-Powered Note Taking",
@@ -10,33 +11,19 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col lg:flex-row">
       {/* Marketing Section */}
-      <div className="flex-1 bg-background p-8 lg:p-16 overflow-y-auto">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-bold tracking-tight">
-            neuro Note
-          </h1>
-          <p className="mt-6 text-xl text-muted-foreground">
-            Transform your note-taking experience with AI-powered insights and organization.
-          </p>
-          
-          <div className="mt-12 space-y-8">
-            <Feature
-              title="AI-Powered Note Taking"
-              description="Let AI help you organize, summarize, and enhance your notes automatically."
-            />
-            <Feature
-              title="Smart Organization"
-              description="Your notes are automatically categorized and tagged for easy retrieval."
-            />
-            <Feature
-              title="Cross-Platform Sync"
-              description="Access your notes from any device, always in sync."
-            />
-            <Feature
-              title="Secure & Private"
-              description="Your notes are encrypted and only accessible to you."
-            />
-          </div>
+      <div className="flex-1 bg-background p-8 lg:p-16 overflow-y-auto flex items-center justify-center">
+        <div className="max-w-2xl mx-auto text-center flex flex-col items-center justify-center gap-2">
+        <h1 className="text-4xl font-bold tracking-tight">neuro note</h1>
+          <TypewriterEffect
+            words={[
+              {
+                text: "A simple note taking app with a little twist of AI...",
+                className: "text-xl text-muted-foreground",
+              },
+            ]}
+            cursorClassName="bg-primary"
+            typeByLetter={true}
+          />
         </div>
       </div>
 
