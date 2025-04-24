@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Trash2 } from "lucide-react"
+import { getAIResponse } from '@/lib/aiResponse'
 
 interface Message {
   id: string
@@ -15,25 +16,7 @@ interface ChatProps {
   onClose: () => void
 }
 
-// Mock AI response function
-const getMockAIResponse = async (message: string): Promise<string> => {
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  if (message.toLowerCase().includes('summarize')) {
-    return "Here's a summary of your recent notes:\n\n1. Meeting notes from yesterday about project planning\n2. Personal reflection on goals for Q2\n3. Ideas for improving team collaboration\n\nWould you like me to go into detail about any of these?"
-  } else if (message.toLowerCase().includes('help me write')) {
-    return "I'll help you write a note. What's on your mind? You can share your thoughts and I'll help structure them into a clear note."
-  }
-  
-  const responses = [
-    "I can help you organize your thoughts into a clear note.",
-    "Would you like me to help you structure this better?",
-    "I'm here to assist you with your note-taking.",
-    "Let me know if you'd like me to elaborate on any point."
-  ]
-  
-  return responses[Math.floor(Math.random() * responses.length)]
-}
+const DEFAULT_AI_ERROR = 'Looks like neural AI is not working right now, please try again later!'
 
 export function Chat({ isOpen, onClose }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
@@ -72,7 +55,7 @@ export function Chat({ isOpen, onClose }: ChatProps) {
     setIsLoading(true)
 
     try {
-      const aiResponse = await getMockAIResponse(userMessage.content)
+      const aiResponse = await getAIResponse(userMessage.content)
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: aiResponse,
@@ -81,7 +64,13 @@ export function Chat({ isOpen, onClose }: ChatProps) {
       }
       setMessages(prev => [...prev, aiMessage])
     } catch (error) {
-      console.error('Error getting AI response:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: error instanceof Error ? error.message : DEFAULT_AI_ERROR,
+        sender: 'ai',
+        timestamp: Date.now()
+      }
+      setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
@@ -90,8 +79,8 @@ export function Chat({ isOpen, onClose }: ChatProps) {
   const handleOptionClick = async (option: string) => {
     if (isLoading) return
     if (option.includes('help me write')) {
-        setInputValue('I want to write a short note about...')
-        return;
+      setInputValue('I want to write a short note about...')
+      return
     }
 
     const userMessage: Message = {
@@ -105,7 +94,7 @@ export function Chat({ isOpen, onClose }: ChatProps) {
     setIsLoading(true)
 
     try {
-      const aiResponse = await getMockAIResponse(option)
+      const aiResponse = await getAIResponse(option)
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: aiResponse,
@@ -114,7 +103,13 @@ export function Chat({ isOpen, onClose }: ChatProps) {
       }
       setMessages(prev => [...prev, aiMessage])
     } catch (error) {
-      console.error('Error getting AI response:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: error instanceof Error ? error.message : DEFAULT_AI_ERROR,
+        sender: 'ai',
+        timestamp: Date.now()
+      }
+      setMessages(prev => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
