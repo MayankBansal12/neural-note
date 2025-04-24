@@ -317,7 +317,7 @@ export function Chat({ isOpen, onClose, noteToSummarize, onCreateNote }: ChatPro
                 ) : (
                   <div className="space-y-2">
                     <p className="text-sm whitespace-pre-line">{message.content}</p>
-                    <span className="text-xs text-gray-500 block">
+                    <span className="text-xs text-gray-200 text-right block">
                       {new Date(message.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {message.sender === 'ai' && !message.isLoading && (
