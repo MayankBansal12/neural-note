@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Shimmer } from "../ui/shimmer"
 import { formatDate } from "@/lib/format"
+import { FileText } from "lucide-react"
 
 const MAX_CHARS = 500
 
@@ -20,9 +21,10 @@ interface NotePopoverProps {
   id: string
   isOpen: boolean
   onClose: () => void
+  onSummarize?: () => void
 }
 
-export function NotePopover({ id, isOpen, onClose }: NotePopoverProps) {
+export function NotePopover({ id, isOpen, onClose, onSummarize }: NotePopoverProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [content, setContent] = useState("")
@@ -112,6 +114,13 @@ export function NotePopover({ id, isOpen, onClose }: NotePopoverProps) {
     }
   }
 
+  const handleSummarize = () => {
+    onClose()
+    if (onSummarize) {
+      onSummarize()
+    }
+  }
+
   const charsCount = content.length
   const isOverLimit = charsCount > MAX_CHARS
 
@@ -121,14 +130,6 @@ export function NotePopover({ id, isOpen, onClose }: NotePopoverProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Edit Note</span>
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-6 w-6 rounded-full"
-            >
-              <X className="h-4 w-4" />
-            </Button> */}
           </DialogTitle>
         </DialogHeader>
 
@@ -152,6 +153,14 @@ export function NotePopover({ id, isOpen, onClose }: NotePopoverProps) {
               </div>
               
               <div className="space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={handleSummarize}
+                  className="gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  Summarize
+                </Button>
                 <Button
                   variant="destructive"
                   onClick={handleDelete}

@@ -34,6 +34,7 @@ export default function NotesPage() {
   const router = useRouter()
   const [hasMore, setHasMore] = useState(true)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [noteToSummarize, setNoteToSummarize] = useState<Note | null>(null)
 
   // Get view preferences and note ID from URL
   const sortOrder = (searchParams.get("sort") as SortOrder) || "desc"
@@ -154,6 +155,21 @@ export default function NotesPage() {
     updateUrlParams({ note: null })
   }
 
+  // Handle note summarization
+  const handleSummarizeNote = async () => {
+    if (noteToSummarize) {
+      setIsChatOpen(true)
+      setNoteToSummarize(null)
+      // The chat component will handle the actual summarization
+    }
+  }
+
+  useEffect(() => {
+    if (noteToSummarize) {
+      handleSummarizeNote()
+    }
+  }, [noteToSummarize])
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -268,12 +284,27 @@ export default function NotesPage() {
             id={selectedNoteId}
             isOpen={true}
             onClose={handleClosePopover}
+            onSummarize={async () => {
+              const { data: note } = await supabase
+                .from("notes")
+                .select("*")
+                .eq("id", selectedNoteId)
+                .single()
+              
+              if (note) {
+                setNoteToSummarize(note)
+              }
+            }}
           />
         )}
       </main>
 
       <ChatButton onClick={() => setIsChatOpen(!isChatOpen)} />
-      <Chat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <Chat 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)}
+        noteToSummarize={noteToSummarize}
+      />
     </div>
   )
 } 

@@ -23,11 +23,12 @@ interface Note {
 interface ChatProps {
   isOpen: boolean
   onClose: () => void
+  noteToSummarize?: Note | null
 }
 
 const DEFAULT_AI_ERROR = 'Looks like neural AI is not working right now, please try again later!'
 
-export function Chat({ isOpen, onClose }: ChatProps) {
+export function Chat({ isOpen, onClose, noteToSummarize }: ChatProps) {
   const supabase = createClientComponentClient()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
@@ -48,6 +49,58 @@ export function Chat({ isOpen, onClose }: ChatProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Handle note summarization
+  useEffect(() => {
+    if (noteToSummarize) {
+      const summarizeNote = async () => {
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          content: "summarize this note",
+          sender: 'user',
+          timestamp: Date.now()
+        }
+
+        const loadingMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: "AI is thinking...",
+          sender: 'ai',
+          timestamp: Date.now(),
+          isLoading: true
+        }
+
+        setMessages(prev => [...prev, userMessage, loadingMessage])
+        setIsLoading(true)
+
+        try {
+          const aiPrompt = `Please summarize this note in a concise way:\n\n${noteToSummarize.content}`
+          const aiResponse = await getAIResponse(aiPrompt)
+          
+          setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id))
+          const aiMessage: Message = {
+            id: (Date.now() + 2).toString(),
+            content: aiResponse,
+            sender: 'ai',
+            timestamp: Date.now()
+          }
+          setMessages(prev => [...prev, aiMessage])
+        } catch (error) {
+          setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id))
+          const errorMessage: Message = {
+            id: (Date.now() + 2).toString(),
+            content: error instanceof Error ? error.message : DEFAULT_AI_ERROR,
+            sender: 'ai',
+            timestamp: Date.now()
+          }
+          setMessages(prev => [...prev, errorMessage])
+        } finally {
+          setIsLoading(false)
+        }
+      }
+
+      summarizeNote()
+    }
+  }, [noteToSummarize])
 
   const fetchRecentNotes = async (): Promise<Note[]> => {
     const { data, error } = await supabase
