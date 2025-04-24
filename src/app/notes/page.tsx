@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef, useCallback, Suspense } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useInfiniteQuery } from "@tanstack/react-query"
 import { useSearchParams, useRouter } from "next/navigation"
 import { CreateNote } from "@/components/notes/create-note"
 import { Shimmer } from "@/components/ui/shimmer"
@@ -12,6 +11,7 @@ import { NotePopover } from "@/components/notes/note-popover"
 import { formatDate } from "@/lib/format"
 import { ChatButton } from "@/components/chat/ChatButton"
 import { Chat } from "@/components/chat/Chat"
+import { useFetchNotes } from "@/hooks/useNotes"
 
 interface Note {
   id: string
@@ -23,8 +23,6 @@ interface Note {
 type SortOrder = "desc" | "asc"
 type GridView = "single" | "double"
 
-const NOTES_PER_PAGE = 5
-
 function NotesContent() {
   const supabase = createClientComponentClient()
   const [greeting, setGreeting] = useState("")
@@ -35,14 +33,11 @@ function NotesContent() {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [noteToSummarize, setNoteToSummarize] = useState<Note | null>(null)
   const [newNoteContent, setNewNoteContent] = useState("")
-  const [notes, setNotes] = useState<Note[]>([])
 
-  // Get view preferences and note ID from URL
   const sortOrder = (searchParams.get("sort") as SortOrder) || "desc"
   const gridView = (searchParams.get("view") as GridView) || "double"
   const selectedNoteId = searchParams.get("note")
 
-  // Update URL params
   const updateUrlParams = (params: { sort?: SortOrder; view?: GridView; note?: string | null }) => {
     const newParams = new URLSearchParams(searchParams)
     if (params.sort) newParams.set("sort", params.sort)
@@ -55,10 +50,8 @@ function NotesContent() {
     router.push(`?${newParams.toString()}`)
   }
 
-  // Intersection Observer for infinite scroll
   const observerTarget = useRef<HTMLDivElement>(null)
 
-  // Fetch user profile
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -70,7 +63,6 @@ function NotesContent() {
     fetchProfile()
   }, [supabase])
 
-  // Update greeting based on time of day
   useEffect(() => {
     const getGreeting = () => {
       const hour = currentTime.getHours()
@@ -81,7 +73,6 @@ function NotesContent() {
 
     setGreeting(getGreeting())
 
-    // Update time every minute
     const timer = setInterval(() => {
       setCurrentTime(new Date())
     }, 60000)
@@ -89,41 +80,14 @@ function NotesContent() {
     return () => clearInterval(timer)
   }, [currentTime])
 
-  // Fetch notes with pagination
   const {
     data,
     isLoading,
     fetchNextPage,
     isFetchingNextPage,
     hasNextPage
-  } = useInfiniteQuery({
-    queryKey: ["notes", sortOrder],
-    queryFn: async ({ pageParam = 0 }) => {
-      const from = pageParam * NOTES_PER_PAGE
-      const to = from + NOTES_PER_PAGE - 1
+  } = useFetchNotes(sortOrder)
 
-      const { data, error, count } = await supabase
-        .from("notes")
-        .select("*", { count: "exact" })
-        .order("updated_at", { ascending: sortOrder === "asc" })
-        .range(from, to)
-
-      if (error) {
-        console.error("Error fetching notes:", error)
-        throw error
-      }
-
-      const hasMore = count ? from + NOTES_PER_PAGE < count : false
-      return {
-        notes: data as Note[],
-        nextPage: hasMore ? pageParam + 1 : undefined
-      }
-    },
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-    initialPageParam: 0
-  })
-
-  // Intersection observer callback
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
     const target = entries[0]
     if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -131,7 +95,6 @@ function NotesContent() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  // Set up intersection observer
   useEffect(() => {
     const observer = new IntersectionObserver(handleObserver, {
       root: null,
@@ -156,12 +119,10 @@ function NotesContent() {
     updateUrlParams({ note: null })
   }
 
-  // Handle note summarization
   const handleSummarizeNote = async () => {
     if (noteToSummarize) {
       setIsChatOpen(true)
       setNoteToSummarize(null)
-      // The chat component will handle the actual summarization
     }
   }
 
@@ -202,7 +163,6 @@ function NotesContent() {
           </div>
         </div>
 
-        {/* Create Note */}
         <div className="pb-6">
           <CreateNote 
             initialContent={newNoteContent}
@@ -210,7 +170,6 @@ function NotesContent() {
           />
         </div>
 
-        {/* Notes List */}
         {!isLoading && allNotes.length === 0 ? (
           <div className="text-center p-8">
             <p className="text-muted-foreground">Don&apos;t have any notes yet? Create one!</p>
@@ -268,7 +227,7 @@ function NotesContent() {
                       </p>
                     </div>
                   ))}
-                  {/* Intersection observer target */}
+
                   <div ref={observerTarget} className="h-4" />
                   {isFetchingNextPage && (
                     <>
@@ -282,7 +241,6 @@ function NotesContent() {
           </>
         )}
 
-        {/* Note Popover */}
         {selectedNoteId && (
           <NotePopover
             id={selectedNoteId}
@@ -306,7 +264,6 @@ function NotesContent() {
       <ChatButton onClick={() => setIsChatOpen(!isChatOpen)} />
       <Chat 
         isOpen={isChatOpen} 
-        // onClose={() => setIsChatOpen(false)}
         noteToSummarize={noteToSummarize}
         onCreateNote={(content: string) => {
           setNewNoteContent(content)

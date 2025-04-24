@@ -1,7 +1,6 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useFetchNoteById, useUpdateNote, useDeleteNote } from "@/hooks/useNotes"
 import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,23 +25,11 @@ interface NotePopoverProps {
 
 export function NotePopover({ id, isOpen, onClose, onSummarize }: NotePopoverProps) {
   const router = useRouter()
-  const { toast } = useToast()
   const [content, setContent] = useState("")
-  const supabase = createClientComponentClient()
-
-  const { data: note, isLoading } = useQuery({
-    queryKey: ["note", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("id", id)
-        .single()
-
-      if (error) throw error
-      return data
-    },
-  })
+  
+  const { data: note, isLoading } = useFetchNoteById(id)
+  const updateNoteMutation = useUpdateNote()
+  const deleteNoteMutation = useDeleteNote()
 
   useEffect(() => {
     if (note) {
@@ -50,67 +37,19 @@ export function NotePopover({ id, isOpen, onClose, onSummarize }: NotePopoverPro
     }
   }, [note])
 
-  const updateNoteMutation = useMutation({
-    mutationFn: async (noteContent: string) => {
-      const { error } = await supabase
-        .from("notes")
-        .update({ content: noteContent, updated_at: new Date().toISOString() })
-        .eq("id", id)
-
-      if (error) throw error
-    },
-    onSuccess: () => {
-      toast({
-        title: "Note updated",
-        description: "Your changes have been saved.",
-      })
-      onClose()
-      router.refresh()
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update note. Please try again.",
-        variant: "destructive",
-      })
-    },
-  })
-
-  const deleteNoteMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("notes")
-        .delete()
-        .eq("id", id)
-
-      if (error) throw error
-    },
-    onSuccess: () => {
-      toast({
-        title: "Note deleted",
-        description: "Your note has been deleted.",
-      })
-      onClose()
-      router.refresh()
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete note. Please try again.",
-        variant: "destructive",
-      })
-    },
-  })
-
   const handleSave = () => {
     if (content.trim() && !isOverLimit) {
-      updateNoteMutation.mutate(content)
+      updateNoteMutation.mutate({ id, content })
+      onClose()
+      router.refresh()
     }
   }
 
   const handleDelete = () => {
     if (confirm("Are you sure you want to delete this note?")) {
-      deleteNoteMutation.mutate()
+      deleteNoteMutation.mutate(id)
+      onClose()
+      router.refresh()
     }
   }
 
@@ -170,7 +109,7 @@ export function NotePopover({ id, isOpen, onClose, onSummarize }: NotePopoverPro
                 </Button>
                 <Button
                   onClick={handleSave}
-                  disabled={updateNoteMutation.isPending || isOverLimit || !content.trim() || content === note.content}
+                  disabled={updateNoteMutation.isPending || isOverLimit || !content.trim() || content === note?.content}
                 >
                   Save
                 </Button>

@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useToast } from "@/components/ui/use-toast"
+import { useCreateNote } from "@/hooks/useNotes"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus } from "lucide-react"
@@ -18,11 +16,8 @@ interface CreateNoteProps {
 export function CreateNote({ initialContent = "", onContentChange }: CreateNoteProps) {
   const [content, setContent] = useState(initialContent)
   const [isExpanded, setIsExpanded] = useState(false)
-  const supabase = createClientComponentClient()
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
+  const createNoteMutation = useCreateNote()
 
-  // Update content when initialContent changes
   useEffect(() => {
     if (initialContent) {
       setContent(initialContent)
@@ -30,54 +25,15 @@ export function CreateNote({ initialContent = "", onContentChange }: CreateNoteP
     }
   }, [initialContent])
 
-  const createNoteMutation = useMutation({
-    mutationFn: async (noteContent: string) => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("User not authenticated")
-
-      const { data, error } = await supabase
-        .from("notes")
-        .insert([
-          {
-            content: noteContent.slice(0, MAX_CHARS),
-            user_id: user.id
-          }
-        ])
-        .select()
-
-      if (error) {
-        console.error("Error creating note:", error)
-        throw error
-      }
-
-      return data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] })
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (content.trim() && !isOverLimit) {
+      createNoteMutation.mutate(content)
       setContent("")
       setIsExpanded(false)
       if (onContentChange) {
         onContentChange("")
       }
-      toast({
-        title: "Note created",
-        description: "Your note has been saved successfully.",
-      })
-    },
-    onError: (error) => {
-      console.error("Error creating note:", error)
-      toast({
-        title: "Error",
-        description: "Failed to create note. Please try again.",
-        variant: "destructive",
-      })
-    }
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (content.trim() && !isOverLimit) {
-      createNoteMutation.mutate(content)
     }
   }
 
