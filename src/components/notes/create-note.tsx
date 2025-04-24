@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/components/ui/use-toast"
@@ -10,12 +10,25 @@ import { Plus } from "lucide-react"
 
 const MAX_CHARS = 500
 
-export function CreateNote() {
-  const [content, setContent] = useState("")
+interface CreateNoteProps {
+  initialContent?: string
+  onContentChange?: (content: string) => void
+}
+
+export function CreateNote({ initialContent = "", onContentChange }: CreateNoteProps) {
+  const [content, setContent] = useState(initialContent)
   const [isExpanded, setIsExpanded] = useState(false)
   const supabase = createClientComponentClient()
   const { toast } = useToast()
   const queryClient = useQueryClient()
+
+  // Update content when initialContent changes
+  useEffect(() => {
+    if (initialContent) {
+      setContent(initialContent)
+      setIsExpanded(true)
+    }
+  }, [initialContent])
 
   const createNoteMutation = useMutation({
     mutationFn: async (noteContent: string) => {
@@ -43,6 +56,9 @@ export function CreateNote() {
       queryClient.invalidateQueries({ queryKey: ["notes"] })
       setContent("")
       setIsExpanded(false)
+      if (onContentChange) {
+        onContentChange("")
+      }
       toast({
         title: "Note created",
         description: "Your note has been saved successfully.",
@@ -65,6 +81,14 @@ export function CreateNote() {
     }
   }
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value
+    setContent(newContent)
+    if (onContentChange) {
+      onContentChange(newContent)
+    }
+  }
+
   const charsCount = content.length
   const isOverLimit = charsCount > MAX_CHARS
 
@@ -73,10 +97,10 @@ export function CreateNote() {
       <div className="relative">
         <Textarea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={handleContentChange}
           placeholder="what's up on your mind? just write..."
           onFocus={() => setIsExpanded(true)}
-          onBlur={() => setIsExpanded(false)}
+          onBlur={() => !content && setIsExpanded(false)}
           className={`resize-none transition-all transform duration-300 rounded-2xl bg-card ${
             isExpanded ? "h-32" : "h-16"
           } ${isOverLimit ? "text-destructive" : ""}`}

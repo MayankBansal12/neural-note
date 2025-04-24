@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Trash2, Loader2 } from "lucide-react"
+import { Send, Trash2, Loader2, Copy, Plus } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 import { getAIResponse } from '@/lib/aiResponse'
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
@@ -24,16 +25,18 @@ interface ChatProps {
   isOpen: boolean
   onClose: () => void
   noteToSummarize?: Note | null
+  onCreateNote?: (content: string) => void
 }
 
-const DEFAULT_AI_ERROR = 'Looks like neural AI is not working right now, please try again later!'
+const DEFAULT_AI_ERROR = 'Looks like neuro AI is not working right now, please try again later!'
 
-export function Chat({ isOpen, onClose, noteToSummarize }: ChatProps) {
+export function Chat({ isOpen, onClose, noteToSummarize, onCreateNote }: ChatProps) {
   const supabase = createClientComponentClient()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     const savedMessages = localStorage.getItem('chat-messages')
@@ -63,7 +66,7 @@ export function Chat({ isOpen, onClose, noteToSummarize }: ChatProps) {
 
         const loadingMessage: Message = {
           id: (Date.now() + 1).toString(),
-          content: "AI is thinking...",
+          content: "neuro AI is thinking...",
           sender: 'ai',
           timestamp: Date.now(),
           isLoading: true
@@ -130,7 +133,7 @@ export function Chat({ isOpen, onClose, noteToSummarize }: ChatProps) {
 
     const loadingMessage: Message = {
       id: (Date.now() + 1).toString(),
-      content: "AI is thinking...",
+      content: "neuro AI is thinking...",
       sender: 'ai',
       timestamp: Date.now(),
       isLoading: true
@@ -180,7 +183,7 @@ export function Chat({ isOpen, onClose, noteToSummarize }: ChatProps) {
 
     const loadingMessage: Message = {
       id: (Date.now() + 1).toString(),
-      content: "AI is thinking...",
+      content: "neuro AI is thinking...",
       sender: 'ai',
       timestamp: Date.now(),
       isLoading: true
@@ -234,12 +237,34 @@ export function Chat({ isOpen, onClose, noteToSummarize }: ChatProps) {
     localStorage.removeItem('chat-messages')
   }
 
+  const handleCopyMessage = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      toast({
+        title: "Copied!",
+        description: "Message copied to clipboard",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy message",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleCreateNote = (content: string) => {
+    if (onCreateNote) {
+      onCreateNote(content)
+    }
+  }
+
   if (!isOpen) return null
 
   return (
     <div className="fixed bottom-20 right-4 w-1/4 h-2/3 bg-background border rounded-lg shadow-lg flex flex-col">
       <div className="p-4 border-b flex justify-between items-center">
-        <h3 className="font-semibold">chat with neural AI</h3>
+        <h3 className="font-semibold">chat with neuro AI</h3>
         <div className="flex gap-2">
           <Button
             variant="ghost"
@@ -290,12 +315,34 @@ export function Chat({ isOpen, onClose, noteToSummarize }: ChatProps) {
                     <p className="text-sm">{message.content}</p>
                   </div>
                 ) : (
-                  <>
+                  <div className="space-y-2">
                     <p className="text-sm whitespace-pre-line">{message.content}</p>
-                    <span className="text-xs text-gray-500 mt-1 block">
+                    <span className="text-xs text-gray-500 block">
                       {new Date(message.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                  </>
+                    {message.sender === 'ai' && !message.isLoading && (
+                      <div className="flex justify-between gap-2 mt-2 pt-2 border-t border-border">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs gap-1"
+                          onClick={() => handleCopyMessage(message.content)}
+                        >
+                          <Copy className="h-3 w-3" />
+                          Copy
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs gap-1"
+                          onClick={() => handleCreateNote(message.content)}
+                        >
+                          <Plus className="h-3 w-3" />
+                          Create Note
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

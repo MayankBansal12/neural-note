@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { LoginForm } from "@/components/auth/login-form"
 
 export const metadata: Metadata = {
-  title: "Neural Note - AI-Powered Note Taking",
+  title: "neuro Note - AI-Powered Note Taking",
   description: "Take smarter notes with AI assistance",
 }
 
@@ -13,7 +13,7 @@ export default function Home() {
       <div className="flex-1 bg-background p-8 lg:p-16 overflow-y-auto">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-4xl font-bold tracking-tight">
-            Neural Note
+            neuro Note
           </h1>
           <p className="mt-6 text-xl text-muted-foreground">
             Transform your note-taking experience with AI-powered insights and organization.

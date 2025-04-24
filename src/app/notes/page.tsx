@@ -35,6 +35,7 @@ export default function NotesPage() {
   const [hasMore, setHasMore] = useState(true)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [noteToSummarize, setNoteToSummarize] = useState<Note | null>(null)
+  const [newNoteContent, setNewNoteContent] = useState("")
 
   // Get view preferences and note ID from URL
   const sortOrder = (searchParams.get("sort") as SortOrder) || "desc"
@@ -175,7 +176,7 @@ export default function NotesPage() {
       <header className="border-b">
         <div className="flex h-16 items-center px-4">
           <div className="flex-1">
-            <h1 className="text-xl font-semibold">neuralnote</h1>
+            <h1 className="text-xl font-semibold">neuronote</h1>
           </div>
           <ThemeToggle />
         </div>
@@ -203,7 +204,10 @@ export default function NotesPage() {
 
         {/* Create Note */}
         <div className="pb-6">
-          <CreateNote />
+          <CreateNote 
+            initialContent={newNoteContent}
+            onContentChange={setNewNoteContent}
+          />
         </div>
 
         {/* Notes List */}
@@ -304,6 +308,11 @@ export default function NotesPage() {
         isOpen={isChatOpen} 
         onClose={() => setIsChatOpen(false)}
         noteToSummarize={noteToSummarize}
+        onCreateNote={(content: string) => {
+          setNewNoteContent(content)
+          setIsChatOpen(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
       />
     </div>
   )
