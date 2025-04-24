@@ -5,21 +5,7 @@ import { Send, Trash2, Loader2, Copy, Plus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { getAIResponse } from '@/lib/aiResponse'
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-
-interface Message {
-  id: string
-  content: string
-  sender: 'user' | 'ai'
-  timestamp: number
-  isLoading?: boolean
-}
-
-interface Note {
-  id: string
-  content: string
-  created_at: string
-  updated_at: string
-}
+import { Note } from "@/lib/types"
 
 interface ChatProps {
   isOpen: boolean

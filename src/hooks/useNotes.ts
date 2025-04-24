@@ -1,13 +1,7 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/components/ui/use-toast"
-
-interface Note {
-  id: string
-  content: string
-  created_at: string
-  updated_at: string
-}
+import { Note } from "@/lib/types"
 
 const NOTES_PER_PAGE = 5
 

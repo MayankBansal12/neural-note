@@ -12,16 +12,7 @@ import { formatDate } from "@/lib/format"
 import { ChatButton } from "@/components/chat/ChatButton"
 import { Chat } from "@/components/chat/Chat"
 import { useFetchNotes } from "@/hooks/useNotes"
-
-interface Note {
-  id: string
-  content: string
-  created_at: string
-  updated_at: string
-}
-
-type SortOrder = "desc" | "asc"
-type GridView = "single" | "double"
+import { Note, SortOrder, GridView } from "@/lib/types"
 
 function NotesContent() {
   const supabase = createClientComponentClient()
