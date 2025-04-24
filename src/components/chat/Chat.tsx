@@ -1,14 +1,23 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Trash2 } from "lucide-react"
+import { Send, Trash2, Loader2 } from "lucide-react"
 import { getAIResponse } from '@/lib/aiResponse'
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 interface Message {
   id: string
   content: string
   sender: 'user' | 'ai'
   timestamp: number
+  isLoading?: boolean
+}
+
+interface Note {
+  id: string
+  content: string
+  created_at: string
+  updated_at: string
 }
 
 interface ChatProps {
@@ -19,6 +28,7 @@ interface ChatProps {
 const DEFAULT_AI_ERROR = 'Looks like neural AI is not working right now, please try again later!'
 
 export function Chat({ isOpen, onClose }: ChatProps) {
+  const supabase = createClientComponentClient()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -39,6 +49,21 @@ export function Chat({ isOpen, onClose }: ChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const fetchRecentNotes = async (): Promise<Note[]> => {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(5)
+
+    if (error) {
+      console.error('Error fetching notes:', error)
+      throw new Error('Failed to fetch recent notes')
+    }
+
+    return data as Note[]
+  }
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputValue.trim() || isLoading) return
@@ -50,22 +75,32 @@ export function Chat({ isOpen, onClose }: ChatProps) {
       timestamp: Date.now()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    const loadingMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: "AI is thinking...",
+      sender: 'ai',
+      timestamp: Date.now(),
+      isLoading: true
+    }
+
+    setMessages(prev => [...prev, userMessage, loadingMessage])
     setInputValue('')
     setIsLoading(true)
 
     try {
       const aiResponse = await getAIResponse(userMessage.content)
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id))
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: (Date.now() + 2).toString(),
         content: aiResponse,
         sender: 'ai',
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, aiMessage])
     } catch (error) {
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id))
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: (Date.now() + 2).toString(),
         content: error instanceof Error ? error.message : DEFAULT_AI_ERROR,
         sender: 'ai',
         timestamp: Date.now()
@@ -90,21 +125,47 @@ export function Chat({ isOpen, onClose }: ChatProps) {
       timestamp: Date.now()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    const loadingMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: "AI is thinking...",
+      sender: 'ai',
+      timestamp: Date.now(),
+      isLoading: true
+    }
+
+    setMessages(prev => [...prev, userMessage, loadingMessage])
     setIsLoading(true)
 
     try {
-      const aiResponse = await getAIResponse(option)
+      let aiPrompt = option
+      
+      // If summarizing notes, fetch recent notes and include them in the prompt
+      if (option.includes('summarize')) {
+        const recentNotes = await fetchRecentNotes()
+        if (recentNotes.length === 0) {
+          throw new Error('No notes found to summarize')
+        }
+        
+        const notesText = recentNotes
+          .map((note, index) => `Note ${index + 1}:\n${note.content}`)
+          .join('\n\n')
+        
+        aiPrompt = `Please summarize these notes in a concise way:\n\n${notesText}`
+      }
+
+      const aiResponse = await getAIResponse(aiPrompt)
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id))
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: (Date.now() + 2).toString(),
         content: aiResponse,
         sender: 'ai',
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, aiMessage])
     } catch (error) {
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id))
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: (Date.now() + 2).toString(),
         content: error instanceof Error ? error.message : DEFAULT_AI_ERROR,
         sender: 'ai',
         timestamp: Date.now()
@@ -170,10 +231,19 @@ export function Chat({ isOpen, onClose }: ChatProps) {
                     : 'bg-muted'
                 }`}
               >
-                <p className="text-sm whitespace-pre-line">{message.content}</p>
-                <span className="text-xs text-gray-500 mt-1 block">
-                  {new Date(message.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                </span>
+                {message.isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <p className="text-sm">{message.content}</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm whitespace-pre-line">{message.content}</p>
+                    <span className="text-xs text-gray-500 mt-1 block">
+                      {new Date(message.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           ))
