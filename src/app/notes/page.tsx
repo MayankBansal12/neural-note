@@ -10,6 +10,8 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { ArrowUpDown, Grid, LayoutList } from "lucide-react"
 import { NotePopover } from "@/components/notes/note-popover"
 import { formatDate } from "@/lib/format"
+import { ChatButton } from "@/components/chat/ChatButton"
+import { Chat } from "@/components/chat/Chat"
 
 interface Note {
   id: string
@@ -31,6 +33,7 @@ export default function NotesPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [hasMore, setHasMore] = useState(true)
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   // Get view preferences and note ID from URL
   const sortOrder = (searchParams.get("sort") as SortOrder) || "desc"
@@ -268,6 +271,9 @@ export default function NotesPage() {
           />
         )}
       </main>
+
+      <ChatButton onClick={() => setIsChatOpen(!isChatOpen)} />
+      <Chat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   )
 } 
